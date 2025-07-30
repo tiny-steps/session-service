@@ -1,10 +1,10 @@
-package com.tinysteps.sessionservice;
+package com.tintsteps.sessionservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ApplicationTests {
+class SessionServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

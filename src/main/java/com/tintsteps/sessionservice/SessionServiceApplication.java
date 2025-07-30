@@ -1,13 +1,13 @@
-package com.tinysteps.sessionservice;
+package com.tintsteps.sessionservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class Application {
+public class SessionServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(Application.class, args);
+		SpringApplication.run(SessionServiceApplication.class, args);
 	}
 
 }
