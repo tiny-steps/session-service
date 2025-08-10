@@ -1,4 +1,4 @@
-package com.tintsteps.sessionservice;
+package com.tinysteps.sessionservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

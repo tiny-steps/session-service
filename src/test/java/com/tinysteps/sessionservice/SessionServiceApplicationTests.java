@@ -1,4 +1,4 @@
-package com.tintsteps.sessionservice;
+package com.tinysteps.sessionservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
