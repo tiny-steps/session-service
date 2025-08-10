@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: ts-session-service
-          image: subhankarm2312/ts-session-service:60f6cdc-20250809162116 # This will be updated by the pipeline
+          image: subhankarm2312/ts-session-service:9516c59-20250810081152 # This will be updated by the pipeline
           env:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
