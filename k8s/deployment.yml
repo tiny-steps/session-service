@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ts-session-service-deployment
+  labels:
+    app: ts-session-service
 spec:
   replicas: 1
   selector:
@@ -14,21 +16,21 @@ spec:
     spec:
       containers:
         - name: ts-session-service
-          image: subhankarm2312/ts-session-service:f38aacb-20250810081605 # This will be updated by the pipeline
+          image: subhankarm2312/ts-session-service # CORRECTED: Placeholder name now matches ci.yml
           env:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
           resources:
             requests:
-              memory: "128Mi" # Request 256 MiB of memory
-              cpu: "100m"      # Request 0.25 of a CPU core
+              memory: "128Mi"
+              cpu: "100m"
             limits:
-              memory: "512Mi" # Limit the pod to a max of 512 MiB
-              cpu: "500m"      # Limit the pod to a max of 0.5 of a CPU core
+              memory: "512Mi"
+              cpu: "500m"
           ports:
-            - containerPort: 8084
+            - containerPort: 8092
           envFrom:
             - configMapRef:
                 name: ts-session-service-config
             - secretRef:
-                name: ts-session-db-credentials
+                name: ts-session-service-secret # CORRECTED: Name now matches secret.yml
