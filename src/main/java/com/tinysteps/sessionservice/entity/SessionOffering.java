@@ -28,10 +28,10 @@ public class SessionOffering {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "doctor_id", nullable = false)
+    @Column(name = "doctor_id")
     private UUID doctorId;
 
-    @Column(name = "practice_id", nullable = false)
+    @Column(name = "practice_id")
     private UUID practiceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
