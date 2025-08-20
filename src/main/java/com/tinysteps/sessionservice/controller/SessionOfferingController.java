@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/doctors/{doctorId}/practices/{practiceId}/session-offerings")
+@RequestMapping("/api/v1/sessions")
 @RequiredArgsConstructor
 public class SessionOfferingController {
 
@@ -21,75 +21,56 @@ public class SessionOfferingController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isDoctorOwner(authentication, #doctorId)")
-    public SessionOffering create(@PathVariable UUID doctorId,
-                                        @PathVariable UUID practiceId,
+    public SessionOffering create(
                                         @RequestBody SessionOffering offering) {
-        // Enforce path consistency
-        if (!offering.getDoctorId().equals(doctorId) || !offering.getPracticeId().equals(practiceId)) {
-            throw new IllegalArgumentException("Doctor ID or Practice ID mismatch with path");
-        }
+
         return service.create(offering);
     }
 
     @PostMapping("/bulk")
     @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isDoctorOwner(authentication, #doctorId)")
-    public List<SessionOffering> bulkCreateOrUpdate(@PathVariable UUID doctorId,
-                                                          @PathVariable UUID practiceId,
+    public List<SessionOffering> bulkCreateOrUpdate(
                                                           @RequestBody List<SessionOffering> offerings) {
         // Validate all belong to same doctor & practice
-        offerings.forEach(off -> {
-            if (!off.getDoctorId().equals(doctorId) || !off.getPracticeId().equals(practiceId)) {
-                throw new IllegalArgumentException("All offerings must belong to same doctor and practice");
-            }
-        });
+
         return service.bulkCreateOrUpdate(offerings);
     }
 
     @GetMapping("/{offeringId}")
     @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isOfferingOwner(authentication, #offeringId)")
-    public SessionOffering getById(@PathVariable UUID doctorId,
-                                         @PathVariable UUID practiceId,
+    public SessionOffering getById(
                                          @PathVariable UUID offeringId) {
         SessionOffering offering = service.getById(offeringId).orElseThrow(() -> new IllegalArgumentException("Offering not found"));
-        if (!offering.getDoctorId().equals(doctorId) || !offering.getPracticeId().equals(practiceId)) {
-            throw new IllegalArgumentException("Offering does not belong to specified doctor or practice");
-        }
+
         return offering;
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isDoctorOwner(authentication, #doctorId)")
-    public Page<SessionOffering> search(@PathVariable UUID doctorId,
-                                              @PathVariable UUID practiceId,
+    public Page<SessionOffering> search(
                                               @RequestParam(required = false) UUID sessionTypeId,
                                               @RequestParam(required = false) Boolean isActive,
                                               @RequestParam(required = false) BigDecimal minPrice,
                                               @RequestParam(required = false) BigDecimal maxPrice,
                                               Pageable pageable) {
-        return service.search(doctorId, practiceId, sessionTypeId, isActive, minPrice, maxPrice, pageable);
+        return service.search(sessionTypeId, isActive, minPrice, maxPrice, pageable);
     }
 
     @PutMapping("/{offeringId}")
     @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isOfferingOwner(authentication, #offeringId)")
-    public SessionOffering update(@PathVariable UUID doctorId,
-                                        @PathVariable UUID practiceId,
+    public SessionOffering update(
                                         @PathVariable UUID offeringId,
                                         @RequestBody SessionOffering offering) {
-        if (!offering.getDoctorId().equals(doctorId) || !offering.getPracticeId().equals(practiceId)) {
-            throw new IllegalArgumentException("Doctor ID or Practice ID mismatch with path");
-        }
+
         return service.update(offeringId, offering);
     }
 
     @DeleteMapping("/{offeringId}")
     @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isOfferingOwner(authentication, #offeringId)")
-    public void delete(@PathVariable UUID doctorId,
-                       @PathVariable UUID practiceId,
+    public void delete(
                        @PathVariable UUID offeringId) {
         SessionOffering offering = service.getById(offeringId).orElseThrow(() -> new IllegalArgumentException("Offering not found"));
-        if (!offering.getDoctorId().equals(doctorId) || !offering.getPracticeId().equals(practiceId)) {
-            throw new IllegalArgumentException("Offering does not belong to specified doctor or practice");
-        }
+
         service.delete(offeringId);
     }
 
@@ -105,12 +86,4 @@ public class SessionOfferingController {
         return service.deactivate(offeringId);
     }
 
-    @GetMapping("/by-practice")
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isDoctorOwner(authentication, #doctorId)")
-    public Page<SessionOffering> getAllByPractice(@PathVariable UUID doctorId,
-                                                        @RequestParam UUID practiceId,
-                                                        Pageable pageable) {
-        // This endpoint lists session offerings hospital-wise for a doctor
-        return service.search(doctorId, practiceId, null, true, null, null, pageable);
-    }
 }

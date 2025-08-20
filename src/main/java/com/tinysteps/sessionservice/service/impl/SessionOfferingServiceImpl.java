@@ -63,8 +63,7 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
     }
 
     @Override
-    public Page<SessionOffering> search(UUID doctorId,
-                                              UUID practiceId,
+    public Page<SessionOffering> search(
                                               UUID sessionTypeId,
                                               Boolean isActive,
                                               BigDecimal minPrice,
@@ -72,9 +71,8 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
                                               Pageable pageable) {
 
         Specification<SessionOffering> spec = Specification.where(
-                        SessionOfferingSpecs.byDoctorId(doctorId))
-                .and(SessionOfferingSpecs.byPracticeId(practiceId))
-                .and(SessionOfferingSpecs.bySessionTypeId(sessionTypeId))
+
+                SessionOfferingSpecs.bySessionTypeId(sessionTypeId))
                 .and(SessionOfferingSpecs.isActive(isActive))
                 .and(SessionOfferingSpecs.byPriceRange(minPrice, maxPrice));
 

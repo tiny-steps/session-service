@@ -17,8 +17,7 @@ public interface SessionOfferingService {
 
     Optional<SessionOffering> getById(UUID id);
 
-    Page<SessionOffering> search(UUID doctorId,
-                                       UUID practiceId,
+    Page<SessionOffering> search(
                                        UUID sessionTypeId,
                                        Boolean isActive,
                                        BigDecimal minPrice,
