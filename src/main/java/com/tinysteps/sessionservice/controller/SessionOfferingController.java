@@ -20,7 +20,7 @@ public class SessionOfferingController {
     private final SessionOfferingService service;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isDoctorOwner(authentication, #doctorId)")
+    @PreAuthorize("hasRole('ADMIN')")
     public SessionOffering create(
                                         @RequestBody SessionOffering offering) {
 
@@ -28,7 +28,7 @@ public class SessionOfferingController {
     }
 
     @PostMapping("/bulk")
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isDoctorOwner(authentication, #doctorId)")
+    @PreAuthorize("hasRole('ADMIN')@sessionSecurity.isDoctorOwner(authentication, #doctorId)")
     public List<SessionOffering> bulkCreateOrUpdate(
                                                           @RequestBody List<SessionOffering> offerings) {
         // Validate all belong to same doctor & practice
@@ -37,7 +37,7 @@ public class SessionOfferingController {
     }
 
     @GetMapping("/{offeringId}")
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isOfferingOwner(authentication, #offeringId)")
+    @PreAuthorize("hasRole('ADMIN')")
     public SessionOffering getById(
                                          @PathVariable UUID offeringId) {
         SessionOffering offering = service.getById(offeringId).orElseThrow(() -> new IllegalArgumentException("Offering not found"));
@@ -46,7 +46,7 @@ public class SessionOfferingController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isDoctorOwner(authentication, #doctorId)")
+    @PreAuthorize("hasRole('ADMIN')@sessionSecurity.isDoctorOwner(authentication, #doctorId)")
     public Page<SessionOffering> search(
                                               @RequestParam(required = false) UUID sessionTypeId,
                                               @RequestParam(required = false) Boolean isActive,
@@ -57,7 +57,7 @@ public class SessionOfferingController {
     }
 
     @PutMapping("/{offeringId}")
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isOfferingOwner(authentication, #offeringId)")
+    @PreAuthorize("hasRole('ADMIN')")
     public SessionOffering update(
                                         @PathVariable UUID offeringId,
                                         @RequestBody SessionOffering offering) {
@@ -66,7 +66,7 @@ public class SessionOfferingController {
     }
 
     @DeleteMapping("/{offeringId}")
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isOfferingOwner(authentication, #offeringId)")
+    @PreAuthorize("hasRole('ADMIN')")
     public void delete(
                        @PathVariable UUID offeringId) {
         SessionOffering offering = service.getById(offeringId).orElseThrow(() -> new IllegalArgumentException("Offering not found"));
@@ -75,13 +75,13 @@ public class SessionOfferingController {
     }
 
     @PostMapping("/{offeringId}/activate")
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isOfferingOwner(authentication, #offeringId)")
+    @PreAuthorize("hasRole('ADMIN')")
     public SessionOffering activate(@PathVariable UUID offeringId) {
         return service.activate(offeringId);
     }
 
     @PostMapping("/{offeringId}/deactivate")
-    @PreAuthorize("hasRole('ADMIN') or @sessionSecurity.isOfferingOwner(authentication, #offeringId)")
+    @PreAuthorize("hasRole('ADMIN')")
     public SessionOffering deactivate(@PathVariable UUID offeringId) {
         return service.deactivate(offeringId);
     }
