@@ -42,13 +42,13 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
         }
 
         // Practice validation is optional since we removed practiceId from frontend
-        if (offering.getPracticeId() != null) {
-            try {
-                practiceIntegrationService.validatePracticeExistsOrThrow(offering.getPracticeId());
-            } catch (Exception e) {
-                System.err.println("Practice validation failed: " + e.getMessage());
-            }
-        }
+        // if (offering.getPracticeId() != null) {
+        // try {
+        // practiceIntegrationService.validatePracticeExistsOrThrow(offering.getPracticeId());
+        // } catch (Exception e) {
+        // System.err.println("Practice validation failed: " + e.getMessage());
+        // }
+        // }
 
         // Ensure session type exists
         SessionType type = sessionTypeRepository.findById(offering.getSessionType().getId())
