@@ -34,7 +34,7 @@ public class SessionOffering {
     @Column(name = "practice_id")
     private UUID practiceId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "session_type_id", nullable = false)
     private SessionType sessionType;
 
