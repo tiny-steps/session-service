@@ -21,56 +21,45 @@ public class SessionOfferingController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public SessionOffering create(
-                                        @RequestBody SessionOffering offering) {
-
+    public SessionOffering create(@RequestBody SessionOffering offering) {
         return service.create(offering);
     }
 
     @PostMapping("/bulk")
-    @PreAuthorize("hasRole('ADMIN')@sessionSecurity.isDoctorOwner(authentication, #doctorId)")
-    public List<SessionOffering> bulkCreateOrUpdate(
-                                                          @RequestBody List<SessionOffering> offerings) {
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<SessionOffering> bulkCreateOrUpdate(@RequestBody List<SessionOffering> offerings) {
         // Validate all belong to same doctor & practice
-
         return service.bulkCreateOrUpdate(offerings);
     }
 
     @GetMapping("/{offeringId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public SessionOffering getById(
-                                         @PathVariable UUID offeringId) {
+    public SessionOffering getById(@PathVariable UUID offeringId) {
         SessionOffering offering = service.getById(offeringId).orElseThrow(() -> new IllegalArgumentException("Offering not found"));
-
         return offering;
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')@sessionSecurity.isDoctorOwner(authentication, #doctorId)")
+    @PreAuthorize("hasRole('ADMIN')")
     public Page<SessionOffering> search(
-                                              @RequestParam(required = false) UUID sessionTypeId,
-                                              @RequestParam(required = false) Boolean isActive,
-                                              @RequestParam(required = false) BigDecimal minPrice,
-                                              @RequestParam(required = false) BigDecimal maxPrice,
-                                              Pageable pageable) {
+            @RequestParam(required = false) UUID sessionTypeId,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            Pageable pageable) {
         return service.search(sessionTypeId, isActive, minPrice, maxPrice, pageable);
     }
 
     @PutMapping("/{offeringId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public SessionOffering update(
-                                        @PathVariable UUID offeringId,
-                                        @RequestBody SessionOffering offering) {
-
+    public SessionOffering update(@PathVariable UUID offeringId, @RequestBody SessionOffering offering) {
         return service.update(offeringId, offering);
     }
 
     @DeleteMapping("/{offeringId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public void delete(
-                       @PathVariable UUID offeringId) {
+    public void delete(@PathVariable UUID offeringId) {
         SessionOffering offering = service.getById(offeringId).orElseThrow(() -> new IllegalArgumentException("Offering not found"));
-
         service.delete(offeringId);
     }
 
@@ -85,5 +74,4 @@ public class SessionOfferingController {
     public SessionOffering deactivate(@PathVariable UUID offeringId) {
         return service.deactivate(offeringId);
     }
-
 }
