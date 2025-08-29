@@ -1,0 +1,57 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: ts-session-service
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev.tinystepscdc.com/auth
+  datasource:
+    url: jdbc:postgresql://postgres-service:5432/sessions?useSSL=false&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: postgres
+    password: root
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 2
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+
+# Eureka client configuration
+eureka:
+  instance:
+    prefer-ip-address: true
+    hostname: ts-session-service
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://ts-service-registry:8761/eureka/
+
+# Integration service URLs
+integration:
+  doctor-service:
+    base-url: http://ts-doctor-service/api/v1/doctors
+    practice-url: http://ts-doctor-service/api/v1/practices
+  patient-service:
+    base-url: http://ts-patient-service/api/v1/patients
+  address-service:
+    base-url: http://ts-address-service/api/v1/addresses
+  user-service:
+    base-url: http://ts-user-service/api/v1/users
+  appointment-service:
+    base-url: http://ts-appointment-service/api/v1/appointments
