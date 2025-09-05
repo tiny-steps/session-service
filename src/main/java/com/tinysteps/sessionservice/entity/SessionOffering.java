@@ -13,7 +13,7 @@ import java.time.ZonedDateTime;
  * A doctor's mapping to a session type at a specific practice with price.
  */
 @Entity
-@Table(name = "doctor_session_offerings", uniqueConstraints = {
+@Table(name = "session_offerings", uniqueConstraints = {
         @UniqueConstraint(name = "uq_doctor_session_type",
                 columnNames = {"doctor_id", "session_type_id"})
 }, indexes = {
