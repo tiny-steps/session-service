@@ -22,11 +22,12 @@ public interface SessionOfferingService {
                                        Boolean isActive,
                                        BigDecimal minPrice,
                                        BigDecimal maxPrice,
+                                       UUID branchId,
                                        Pageable pageable);
 
     List<SessionOffering> getByDoctorId(UUID doctorId);
 
-    List<SessionOffering> getByPracticeId(UUID practiceId);
+    // getByPracticeId method removed - no longer needed after Practice entity removal
 
     SessionOffering update(UUID id, SessionOffering offering);
 

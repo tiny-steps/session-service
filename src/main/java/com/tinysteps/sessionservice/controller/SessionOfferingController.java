@@ -20,8 +20,9 @@ public class SessionOfferingController {
     private final SessionOfferingService service;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
     public SessionOffering create(@RequestBody SessionOffering offering) {
+        // Branch validation is now handled by BranchValidationFilter
         return service.create(offering);
     }
 
@@ -40,14 +41,17 @@ public class SessionOfferingController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or hasRole('RECEPTIONIST')")
     public Page<SessionOffering> search(
             @RequestParam(required = false) UUID sessionTypeId,
             @RequestParam(required = false) Boolean isActive,
             @RequestParam(required = false) BigDecimal minPrice,
             @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) UUID branchId,
             Pageable pageable) {
-        return service.search(sessionTypeId, isActive, minPrice, maxPrice, pageable);
+        
+        // Branch validation is now handled by BranchValidationFilter
+        return service.search(sessionTypeId, isActive, minPrice, maxPrice, branchId, pageable);
     }
 
     @PutMapping("/{offeringId}")

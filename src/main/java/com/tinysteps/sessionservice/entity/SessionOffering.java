@@ -14,12 +14,12 @@ import java.time.ZonedDateTime;
  */
 @Entity
 @Table(name = "doctor_session_offerings", uniqueConstraints = {
-        @UniqueConstraint(name = "uq_doctor_practice_type",
-                columnNames = {"doctor_id", "practice_id", "session_type_id"})
+        @UniqueConstraint(name = "uq_doctor_session_type",
+                columnNames = {"doctor_id", "session_type_id"})
 }, indexes = {
         @Index(name = "idx_dso_doctor_id", columnList = "doctor_id"),
-        @Index(name = "idx_dso_practice_id", columnList = "practice_id"),
         @Index(name = "idx_dso_session_type_id", columnList = "session_type_id")
+        // practice_id index removed - no longer needed after Practice entity removal
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class SessionOffering {
@@ -31,8 +31,10 @@ public class SessionOffering {
     @Column(name = "doctor_id")
     private UUID doctorId;
 
-    @Column(name = "practice_id")
-    private UUID practiceId;
+    // practiceId field removed - no longer needed after Practice entity removal
+    
+    @Column(name = "branch_id")
+    private UUID branchId; // Branch context for multi-branch support
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "session_type_id", nullable = false)

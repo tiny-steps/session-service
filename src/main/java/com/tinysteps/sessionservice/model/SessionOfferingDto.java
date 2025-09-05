@@ -8,7 +8,7 @@ import java.util.UUID;
 public class SessionOfferingDto {
     private UUID id;
     private UUID doctorId;
-    private UUID practiceId;
+    // practiceId field removed - no longer needed after Practice entity removal
     private UUID sessionTypeId;
     private String sessionTypeName;
     private BigDecimal price;

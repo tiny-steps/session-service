@@ -20,10 +20,10 @@ public class TimingIntegrationService {
     private final IntegrationProperties integrationProperties;
     private final CircuitBreaker timingServiceCircuitBreaker;
 
-    public boolean isSlotAvailable(UUID doctorId, UUID practiceId, LocalDate date, String slot) {
+    public boolean isSlotAvailable(UUID doctorId, LocalDate date, String slot) {
+        // practiceId parameter removed - no longer needed after Practice entity removal
         String url = integrationProperties.getTimingService().getBaseUrl()
                 + "/doctors/" + doctorId
-                + "/practices/" + practiceId
                 + "/slots/available?date=" + date + "&slot=" + slot;
         return secureWebClient.get()
                 .uri(url)

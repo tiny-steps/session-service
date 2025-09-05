@@ -1,7 +1,7 @@
 package com.tinysteps.sessionservice.config;
 
 import com.tinysteps.sessionservice.entity.SessionOffering;
-import com.tinysteps.sessionservice.integration.service.AddressIntegrationService;
+// AddressIntegrationService import removed - no longer needed after Practice entity removal
 import com.tinysteps.sessionservice.integration.service.DoctorIntegrationService;
 import com.tinysteps.sessionservice.repository.SessionOfferingRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class ApplicationSecurityConfig {
 
     private final SessionOfferingRepository offeringRepository;
     private final DoctorIntegrationService doctorIntegrationService;
-    private final AddressIntegrationService addressIntegrationService;
+    // AddressIntegrationService dependency removed - no longer needed after Practice entity removal
 
     // ---------- ROLE CHECKS ----------
     public boolean isAdmin(Authentication auth) {
@@ -60,14 +60,5 @@ public class ApplicationSecurityConfig {
         return off.filter(o -> isDoctorOwner(authentication, o.getDoctorId())).isPresent();
     }
 
-    public boolean isPracticeOwner(Authentication authentication, UUID practiceId) {
-        if (isAdmin(authentication)) return true;
-        if (!isDoctor(authentication)) return false;
-        try {
-            return addressIntegrationService.validatePracticeOwnershipByUserId(practiceId, getAuthenticatedUserId(authentication));
-        } catch (Exception e) {
-            log.warn("Practice ownership check failed for {}", practiceId, e);
-            return false;
-        }
-    }
+    // isPracticeOwner method removed - no longer needed after Practice entity removal
 }

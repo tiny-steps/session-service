@@ -41,14 +41,7 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
             System.err.println("Doctor validation failed: " + e.getMessage());
         }
 
-        // Practice validation is optional since we removed practiceId from frontend
-        if (offering.getPracticeId() != null) {
-            try {
-                practiceIntegrationService.validatePracticeExistsOrThrow(offering.getPracticeId());
-            } catch (Exception e) {
-                System.err.println("Practice validation failed: " + e.getMessage());
-            }
-        }
+        // Practice validation removed - no longer needed after Practice entity removal
 
         // Ensure session type exists
         SessionType type = sessionTypeRepository.findById(offering.getSessionType().getId())
@@ -71,14 +64,7 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
                 System.err.println("Doctor validation failed: " + e.getMessage());
             }
 
-            // Practice validation is optional since we removed practiceId from frontend
-            if (off.getPracticeId() != null) {
-                try {
-                    practiceIntegrationService.validatePracticeExistsOrThrow(off.getPracticeId());
-                } catch (Exception e) {
-                    System.err.println("Practice validation failed: " + e.getMessage());
-                }
-            }
+            // Practice validation removed - no longer needed after Practice entity removal
 
             SessionType type = sessionTypeRepository.findById(off.getSessionType().getId())
                     .orElseThrow(() -> new IllegalArgumentException("Invalid SessionType ID"));
@@ -98,13 +84,14 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
             Boolean isActive,
             BigDecimal minPrice,
             BigDecimal maxPrice,
+            UUID branchId,
             Pageable pageable) {
 
         Specification<SessionOffering> spec = Specification.where(
-
                 SessionOfferingSpecs.bySessionTypeId(sessionTypeId))
                 .and(SessionOfferingSpecs.isActive(isActive))
-                .and(SessionOfferingSpecs.byPriceRange(minPrice, maxPrice));
+                .and(SessionOfferingSpecs.byPriceRange(minPrice, maxPrice))
+                .and(SessionOfferingSpecs.byBranchId(branchId));
 
         return repository.findAll(spec, pageable);
     }
@@ -114,10 +101,7 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
         return repository.findByDoctorId(doctorId);
     }
 
-    @Override
-    public List<SessionOffering> getByPracticeId(UUID practiceId) {
-        return repository.findByPracticeId(practiceId);
-    }
+    // getByPracticeId method removed - no longer needed after Practice entity removal
 
     @Override
     @Transactional

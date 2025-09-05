@@ -19,29 +19,7 @@ public class AddressIntegrationService {
     private final IntegrationProperties integrationProperties;
     private final CircuitBreaker addressServiceCircuitBreaker;
 
-    public void validatePracticeExistsOrThrow(UUID practiceId) {
-        String url = integrationProperties.getAddressService().getBaseUrl() + "/" + practiceId;
-        secureWebClient.get()
-                .uri(url)
-                .retrieve()
-                .onStatus(status -> status.is4xxClientError(),
-                        resp -> Mono.error(new IllegalArgumentException("Practice not found: " + practiceId)))
-                .bodyToMono(Void.class)
-                .transformDeferred(CircuitBreakerOperator.of(addressServiceCircuitBreaker))
-                .block();
-    }
-
-    public boolean validatePracticeOwnershipByUserId(UUID practiceId, String userId) {
-        String url = integrationProperties.getAddressService().getBaseUrl()
-                + "/" + practiceId + "/owner?userId=" + userId;
-        return secureWebClient.get()
-                .uri(url)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError,
-                        resp -> Mono.error(new RuntimeException("Practice ownership check failed")))
-                .bodyToMono(Boolean.class)
-                .transformDeferred(CircuitBreakerOperator.of(addressServiceCircuitBreaker))
-                .blockOptional()
-                .orElse(false);
-    }
+    // validatePracticeExistsOrThrow method removed - no longer needed after Practice entity removal
+    
+    // validatePracticeOwnershipByUserId method removed - no longer needed after Practice entity removal
 }

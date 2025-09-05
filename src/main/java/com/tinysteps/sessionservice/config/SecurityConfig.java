@@ -1,5 +1,6 @@
 package com.tinysteps.sessionservice.config;
 
+import com.tinysteps.sessionservice.filter.BranchValidationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
         private final InternalApiAuthenticationFilter internalApiAuthenticationFilter;
+        private final BranchValidationFilter branchValidationFilter;
 
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -39,6 +41,9 @@ public class SecurityConfig {
                                                                                 jwtAuthenticationConverter())))
                                 // Add the internal API authentication filter before the JWT filter
                                 .addFilterBefore(internalApiAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class)
+                                // Add branch validation filter after JWT authentication
+                                .addFilterAfter(branchValidationFilter,
                                                 UsernamePasswordAuthenticationFilter.class);
 
                 return http.build();

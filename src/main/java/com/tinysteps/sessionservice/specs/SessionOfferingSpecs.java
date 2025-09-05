@@ -13,10 +13,7 @@ public class SessionOfferingSpecs {
                 doctorId == null ? null : cb.equal(root.get("doctorId"), doctorId);
     }
 
-    public static Specification<SessionOffering> byPracticeId(UUID practiceId) {
-        return (root, cq, cb) ->
-                practiceId == null ? null : cb.equal(root.get("practiceId"), practiceId);
-    }
+    // byPracticeId method removed - no longer needed after Practice entity removal
 
     public static Specification<SessionOffering> bySessionTypeId(UUID sessionTypeId) {
         return (root, cq, cb) ->
@@ -39,6 +36,11 @@ public class SessionOfferingSpecs {
                 return cb.le(root.get("price"), max);
             }
         };
+    }
+
+    public static Specification<SessionOffering> byBranchId(UUID branchId) {
+        return (root, cq, cb) ->
+                branchId == null ? null : cb.equal(root.get("branchId"), branchId);
     }
 
     // More filters as needed

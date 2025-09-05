@@ -15,8 +15,9 @@ public interface SessionOfferingRepository
         JpaSpecificationExecutor<SessionOffering> {
 
     List<SessionOffering> findByDoctorId(UUID doctorId);
-    List<SessionOffering> findByPracticeId(UUID practiceId);
-    List<SessionOffering> findByDoctorIdAndPracticeId(UUID doctorId, UUID practiceId);
+    // findByPracticeId method removed - no longer needed after Practice entity removal
+    // findByDoctorIdAndPracticeId method removed - no longer needed after Practice entity removal
     List<SessionOffering> findBySessionType(SessionType sessionType);
-    Optional<SessionOffering> findByDoctorIdAndPracticeIdAndSessionType_Id(UUID doctorId, UUID practiceId, UUID sessionTypeId);
+    // findByDoctorIdAndPracticeIdAndSessionType_Id method removed - no longer needed after Practice entity removal
+    Optional<SessionOffering> findByDoctorIdAndSessionType_Id(UUID doctorId, UUID sessionTypeId);
 }
