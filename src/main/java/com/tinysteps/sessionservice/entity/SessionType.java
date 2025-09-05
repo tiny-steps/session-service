@@ -42,4 +42,45 @@ public class SessionType {
 
     @UpdateTimestamp
     private ZonedDateTime updatedAt;
+
+    // Manual getters and setters for compilation
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getDefaultDurationMinutes() {
+        return defaultDurationMinutes;
+    }
+
+    public void setDefaultDurationMinutes(int defaultDurationMinutes) {
+        this.defaultDurationMinutes = defaultDurationMinutes;
+    }
+
+    public boolean isTelemedicineAvailable() {
+        return isTelemedicineAvailable;
+    }
+
+    public void setTelemedicineAvailable(boolean telemedicineAvailable) {
+        this.isTelemedicineAvailable = telemedicineAvailable;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
+    }
 }

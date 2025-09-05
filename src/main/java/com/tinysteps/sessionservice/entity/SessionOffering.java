@@ -51,4 +51,113 @@ public class SessionOffering {
 
     @UpdateTimestamp
     private ZonedDateTime updatedAt;
+
+    // Manual getters and setters for compilation
+    public UUID getBranchId() {
+        return branchId;
+    }
+
+    public void setBranchId(UUID branchId) {
+        this.branchId = branchId;
+    }
+
+    public UUID getDoctorId() {
+        return doctorId;
+    }
+
+    public void setDoctorId(UUID doctorId) {
+        this.doctorId = doctorId;
+    }
+
+    public SessionType getSessionType() {
+        return sessionType;
+    }
+
+    public void setSessionType(SessionType sessionType) {
+        this.sessionType = sessionType;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
+    }
+
+    public static SessionOfferingBuilder builder() {
+        return new SessionOfferingBuilder();
+    }
+
+    public static class SessionOfferingBuilder {
+        private UUID id;
+        private UUID doctorId;
+        private UUID branchId;
+        private SessionType sessionType;
+        private BigDecimal price;
+        private boolean isActive = true;
+        private ZonedDateTime createdAt;
+        private ZonedDateTime updatedAt;
+
+        public SessionOfferingBuilder id(UUID id) {
+            this.id = id;
+            return this;
+        }
+
+        public SessionOfferingBuilder doctorId(UUID doctorId) {
+            this.doctorId = doctorId;
+            return this;
+        }
+
+        public SessionOfferingBuilder branchId(UUID branchId) {
+            this.branchId = branchId;
+            return this;
+        }
+
+        public SessionOfferingBuilder sessionType(SessionType sessionType) {
+            this.sessionType = sessionType;
+            return this;
+        }
+
+        public SessionOfferingBuilder price(BigDecimal price) {
+            this.price = price;
+            return this;
+        }
+
+        public SessionOfferingBuilder isActive(boolean isActive) {
+            this.isActive = isActive;
+            return this;
+        }
+
+        public SessionOfferingBuilder createdAt(ZonedDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public SessionOfferingBuilder updatedAt(ZonedDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
+        public SessionOffering build() {
+            SessionOffering offering = new SessionOffering();
+            offering.id = this.id;
+            offering.doctorId = this.doctorId;
+            offering.branchId = this.branchId;
+            offering.sessionType = this.sessionType;
+            offering.price = this.price;
+            offering.isActive = this.isActive;
+            offering.createdAt = this.createdAt;
+            offering.updatedAt = this.updatedAt;
+            return offering;
+        }
+    }
 }

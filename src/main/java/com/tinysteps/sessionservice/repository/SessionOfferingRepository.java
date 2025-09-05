@@ -20,4 +20,9 @@ public interface SessionOfferingRepository
     List<SessionOffering> findBySessionType(SessionType sessionType);
     // findByDoctorIdAndPracticeIdAndSessionType_Id method removed - no longer needed after Practice entity removal
     Optional<SessionOffering> findByDoctorIdAndSessionType_Id(UUID doctorId, UUID sessionTypeId);
+    
+    // Methods for branch transfer functionality
+    List<SessionOffering> findByBranchId(UUID branchId);
+    List<SessionOffering> findByBranchIdAndCreatedAtBetween(UUID branchId, java.time.ZonedDateTime startDate, java.time.ZonedDateTime endDate);
+    List<SessionOffering> findByIdIn(List<UUID> sessionIds);
 }
