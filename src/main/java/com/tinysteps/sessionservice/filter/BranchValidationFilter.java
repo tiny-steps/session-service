@@ -34,16 +34,15 @@ public class BranchValidationFilter extends OncePerRequestFilter {
 
     // Patterns for endpoints that require branch validation
     private static final List<Pattern> BRANCH_REQUIRED_PATTERNS = List.of(
-        Pattern.compile("/api/v1/session-offerings.*"),
-        Pattern.compile("/api/v1/sessions.*")
-    );
+            Pattern.compile("/api/v1/session-offerings.*"),
+            Pattern.compile("/api/v1/sessions.*"));
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        
+
         String requestURI = request.getRequestURI();
-        
+
         // Skip validation for non-protected endpoints
         if (!requiresBranchValidation(requestURI)) {
             filterChain.doFilter(request, response);
@@ -67,14 +66,14 @@ public class BranchValidationFilter extends OncePerRequestFilter {
 
             // Extract branchId from request
             String branchId = extractBranchId(request);
-            
+
             if (branchId != null) {
                 // Validate branch access
-                securityService.validateBranchAccess(branchId);
+                securityService.validateContextAccess(branchId, "healthcare");
                 log.debug("Branch validation successful for branchId: {}", branchId);
             } else {
                 // Use primary branch if no branchId specified
-                UUID primaryBranchId = securityService.getPrimaryBranchId();
+                UUID primaryBranchId = securityService.getPrimaryContextId("healthcare");
                 if (primaryBranchId != null) {
                     request.setAttribute("branchId", primaryBranchId.toString());
                     log.debug("Using primary branch: {}", primaryBranchId);
@@ -82,7 +81,7 @@ public class BranchValidationFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
-            
+
         } catch (RuntimeException e) {
             log.warn("Branch validation failed: {}", e.getMessage());
             sendErrorResponse(response, HttpStatus.FORBIDDEN, e.getMessage());
@@ -95,9 +94,9 @@ public class BranchValidationFilter extends OncePerRequestFilter {
     }
 
     private boolean hasRequiredRole(List<String> userRoles) {
-        return userRoles.contains("ADMIN") || 
-               userRoles.contains("DOCTOR") || 
-               userRoles.contains("RECEPTIONIST");
+        return userRoles.contains("ADMIN") ||
+                userRoles.contains("DOCTOR") ||
+                userRoles.contains("RECEPTIONIST");
     }
 
     private String extractBranchId(HttpServletRequest request) throws IOException {
@@ -123,18 +122,22 @@ public class BranchValidationFilter extends OncePerRequestFilter {
 
     private String extractFromPathVariable(String requestURI) {
         // Extract branchId from path patterns like /api/v1/branches/{branchId}/...
+        // Also handle sessions endpoint patterns
         Pattern pattern = Pattern.compile("/branches/([a-fA-F0-9-]{36})");
         Matcher matcher = pattern.matcher(requestURI);
         if (matcher.find()) {
             return matcher.group(1);
         }
+
+        // For sessions endpoint, we don't extract branchId from path
+        // Branch ID should come from query parameters or request body
         return null;
     }
 
     private String extractFromRequestBody(HttpServletRequest request) throws IOException {
         ContentCachingRequestWrapper wrapper = new ContentCachingRequestWrapper(request);
         byte[] body = StreamUtils.copyToByteArray(wrapper.getInputStream());
-        
+
         if (body.length > 0) {
             String bodyString = new String(body, StandardCharsets.UTF_8);
             try {
@@ -147,7 +150,7 @@ public class BranchValidationFilter extends OncePerRequestFilter {
                 log.debug("Could not parse request body as JSON: {}", e.getMessage());
             }
         }
-        
+
         return null;
     }
 
@@ -155,14 +158,13 @@ public class BranchValidationFilter extends OncePerRequestFilter {
         response.setStatus(status.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-        
+
         String errorResponse = String.format(
-            "{\"error\": \"%s\", \"message\": \"%s\", \"status\": %d}",
-            status.getReasonPhrase(),
-            message,
-            status.value()
-        );
-        
+                "{\"error\": \"%s\", \"message\": \"%s\", \"status\": %d}",
+                status.getReasonPhrase(),
+                message,
+                status.value());
+
         response.getWriter().write(errorResponse);
     }
 }
