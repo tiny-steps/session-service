@@ -251,7 +251,7 @@ public class SecurityService {
                 throw new SecurityException("Invalid authentication token");
             }
 
-            List<String> contextIdStrings = jwt.getClaimAsStringList("context_ids");
+            List<String> contextIdStrings = jwt.getClaimAsStringList("contextIds");  // Changed from "context_ids" to "contextIds"
             String tokenDomainType = jwt.getClaimAsString("domainType"); // Changed from "domain_type" to "domainType"
 
             if (contextIdStrings == null || contextIdStrings.isEmpty()) {
@@ -331,7 +331,7 @@ public class SecurityService {
                 throw new SecurityException("Invalid authentication token");
             }
 
-            String primaryContextIdString = jwt.getClaimAsString("primary_context_id");
+            String primaryContextIdString = jwt.getClaimAsString("primaryContextId");  // Changed from "primary_context_id" to "primaryContextId"
             String tokenDomainType = jwt.getClaimAsString("domainType"); // Changed from "domain_type" to "domainType"
 
             if (!StringUtils.hasText(primaryContextIdString)) {
