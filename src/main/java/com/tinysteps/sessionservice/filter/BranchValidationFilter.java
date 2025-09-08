@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -58,7 +60,7 @@ public class BranchValidationFilter extends OncePerRequestFilter {
 
         try {
             // Check if user has required roles
-            List<String> userRoles = securityService.getCurrentUserRoles();
+            List<String> userRoles = getUserRolesFromAuthentication(authentication);
             log.debug("User roles retrieved: {}", userRoles);
             if (!hasRequiredRole(userRoles)) {
                 log.warn("User does not have required roles. User roles: {}, Required roles: ADMIN, DOCTOR, RECEPTIONIST", userRoles);
@@ -103,6 +105,23 @@ public class BranchValidationFilter extends OncePerRequestFilter {
         return userRoles.contains("ADMIN") ||
                 userRoles.contains("DOCTOR") ||
                 userRoles.contains("RECEPTIONIST");
+    }
+
+    private List<String> getUserRolesFromAuthentication(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return List.of();
+        }
+
+        return authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(authority -> {
+                    // Remove "ROLE_" prefix if present
+                    if (authority.startsWith("ROLE_")) {
+                        return authority.substring(5);
+                    }
+                    return authority;
+                })
+                .collect(Collectors.toList());
     }
 
     private String extractBranchId(HttpServletRequest request) throws IOException {
