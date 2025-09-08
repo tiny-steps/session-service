@@ -59,13 +59,16 @@ public class BranchValidationFilter extends OncePerRequestFilter {
         try {
             // Check if user has required roles
             List<String> userRoles = securityService.getCurrentUserRoles();
+            log.debug("User roles retrieved: {}", userRoles);
             if (!hasRequiredRole(userRoles)) {
+                log.warn("User does not have required roles. User roles: {}, Required roles: ADMIN, DOCTOR, RECEPTIONIST", userRoles);
                 sendErrorResponse(response, HttpStatus.FORBIDDEN, "Access denied: Insufficient privileges");
                 return;
             }
 
             // Extract branchId from request
             String branchId = extractBranchId(request);
+            log.debug("Extracted branchId from request: {}", branchId);
 
             if (branchId != null) {
                 // Validate branch access
@@ -74,9 +77,12 @@ public class BranchValidationFilter extends OncePerRequestFilter {
             } else {
                 // Use primary branch if no branchId specified
                 UUID primaryBranchId = securityService.getPrimaryContextId("healthcare");
+                log.debug("Primary branch ID retrieved: {}", primaryBranchId);
                 if (primaryBranchId != null) {
                     request.setAttribute("branchId", primaryBranchId.toString());
                     log.debug("Using primary branch: {}", primaryBranchId);
+                } else {
+                    log.warn("No primary branch ID found for user");
                 }
             }
 
