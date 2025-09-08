@@ -252,7 +252,7 @@ public class SecurityService {
             }
 
             List<String> contextIdStrings = jwt.getClaimAsStringList("context_ids");
-            String tokenDomainType = jwt.getClaimAsString("domainType");  // Changed from "domain_type" to "domainType"
+            String tokenDomainType = jwt.getClaimAsString("domainType"); // Changed from "domain_type" to "domainType"
 
             if (contextIdStrings == null || contextIdStrings.isEmpty()) {
                 log.debug("No context IDs found in JWT token for domain: {}", domainType);
@@ -332,7 +332,7 @@ public class SecurityService {
             }
 
             String primaryContextIdString = jwt.getClaimAsString("primary_context_id");
-            String tokenDomainType = jwt.getClaimAsString("domainType");  // Changed from "domain_type" to "domainType"
+            String tokenDomainType = jwt.getClaimAsString("domainType"); // Changed from "domain_type" to "domainType"
 
             if (!StringUtils.hasText(primaryContextIdString)) {
                 // Fallback to legacy primary_branch_id for backward compatibility
@@ -368,6 +368,7 @@ public class SecurityService {
 
     /**
      * Get the currently authenticated user's branch IDs from JWT token claims
+     * 
      * @deprecated Use getContextIds("healthcare") instead
      * @return List of branch IDs (as UUIDs) from token claims
      */

@@ -63,7 +63,9 @@ public class BranchValidationFilter extends OncePerRequestFilter {
             List<String> userRoles = getUserRolesFromAuthentication(authentication);
             log.debug("User roles retrieved: {}", userRoles);
             if (!hasRequiredRole(userRoles)) {
-                log.warn("User does not have required roles. User roles: {}, Required roles: ADMIN, DOCTOR, RECEPTIONIST", userRoles);
+                log.warn(
+                        "User does not have required roles. User roles: {}, Required roles: ADMIN, DOCTOR, RECEPTIONIST",
+                        userRoles);
                 sendErrorResponse(response, HttpStatus.FORBIDDEN, "Access denied: Insufficient privileges");
                 return;
             }
