@@ -8,7 +8,7 @@ spring:
       resourceserver:
         jwt:
           # URI of your Auth Service. The resource server will fetch public keys from here to validate tokens.
-          issuer-uri: http://ts-auth-service:8081
+          issuer-uri: http://localhost:8081
   datasource:
     url: jdbc:postgresql://localhost:5432/sessions
     username: postgres
