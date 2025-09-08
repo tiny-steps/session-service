@@ -13,21 +13,24 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
-        * Enhanced SecurityService with comprehensive defensive programming patterns.
- * Provides secure access to JWT token claims with robust validation and error handling.
+ * Enhanced SecurityService with comprehensive defensive programming patterns.
+ * Provides secure access to JWT token claims with robust validation and error
+ * handling.
  */
 @Service
 @Slf4j
 public class SecurityService {
 
     private static final Set<String> VALID_DOMAIN_TYPES = Set.of(
-            "healthcare", "ecommerce", "cab-booking", "payment", "financial"
-    );
+            "healthcare", "ecommerce", "cab-booking", "payment", "financial");
 
     /**
-     * Get the currently authenticated user's ID from JWT token claims with enhanced validation.
+     * Get the currently authenticated user's ID from JWT token claims with enhanced
+     * validation.
+     *
      * @return User ID from token claims (never null or empty)
-     * @throws SecurityException if user is not authenticated or ID claim is missing/invalid
+     * @throws SecurityException if user is not authenticated or ID claim is
+     *                           missing/invalid
      */
     public String getCurrentUserId() {
         log.debug("Retrieving current user ID from JWT token");
@@ -77,7 +80,9 @@ public class SecurityService {
     }
 
     /**
-     * Get the currently authenticated user's roles from JWT token claims with enhanced validation.
+     * Get the currently authenticated user's roles from JWT token claims with
+     * enhanced validation.
+     *
      * @return List of user roles (never null, empty list if no roles found)
      * @throws SecurityException if authentication context is invalid
      */
@@ -103,7 +108,7 @@ public class SecurityService {
 
             List<String> roles;
             Object roleClaim = jwt.getClaim("role");
-            
+
             if (roleClaim instanceof String roleSingle) {
                 // Handle single role as string
                 roles = StringUtils.hasText(roleSingle) ? List.of(roleSingle) : List.of();
@@ -114,7 +119,7 @@ public class SecurityService {
                 log.debug("No valid roles found in JWT token");
                 return List.of();
             }
-            
+
             if (roles == null || roles.isEmpty()) {
                 log.debug("No roles found in JWT token");
                 return List.of();
@@ -137,6 +142,7 @@ public class SecurityService {
 
     /**
      * Check if the current user has a specific role
+     *
      * @param role Role to check
      * @return true if user has the role, false otherwise
      */
@@ -151,6 +157,7 @@ public class SecurityService {
 
     /**
      * Check if the current user is an admin
+     *
      * @return true if user has ADMIN role, false otherwise
      */
     public boolean isAdmin() {
@@ -160,6 +167,7 @@ public class SecurityService {
     /**
      * Check if the current user can access resources for the given user ID
      * Users can access their own resources, admins can access any resources
+     *
      * @param targetUserId The user ID being accessed
      * @return true if access is allowed, false otherwise
      */
@@ -183,6 +191,7 @@ public class SecurityService {
     /**
      * Validate that the current user can access resources for the given user ID
      * Throws exception if access is not allowed
+     *
      * @param targetUserId The user ID being accessed
      * @throws RuntimeException if access is not allowed
      */
@@ -193,15 +202,23 @@ public class SecurityService {
     }
 
     /**
-     * Get the currently authenticated user's context IDs for a specific domain from JWT token claims
-     * @param domainType The domain type (e.g., "healthcare", "ecommerce", "cab-booking")
+     * Get the currently authenticated user's context IDs for a specific domain from
+     * JWT token claims
+     *
+     * @param domainType The domain type (e.g., "healthcare", "ecommerce",
+     *                   "cab-booking")
      * @return List of context IDs (as UUIDs) from token claims
      */
     /**
-     * Get the currently authenticated user's context IDs for a specific domain from JWT token claims with enhanced validation.
-     * @param domainType The domain type (e.g., "healthcare", "ecommerce", "cab-booking")
-     * @return List of context IDs (as UUIDs) from token claims (never null, empty list if none found)
-     * @throws SecurityException if authentication context is invalid or domain type is invalid
+     * Get the currently authenticated user's context IDs for a specific domain from
+     * JWT token claims with enhanced validation.
+     *
+     * @param domainType The domain type (e.g., "healthcare", "ecommerce",
+     *                   "cab-booking")
+     * @return List of context IDs (as UUIDs) from token claims (never null, empty
+     *         list if none found)
+     * @throws SecurityException if authentication context is invalid or domain type
+     *                           is invalid
      */
     public List<UUID> getContextIds(String domainType) {
         log.debug("Retrieving context IDs for domain type: {}", domainType);
@@ -274,10 +291,14 @@ public class SecurityService {
     }
 
     /**
-     * Get the currently authenticated user's primary context ID for a specific domain from JWT token claims with enhanced validation.
-     * @param domainType The domain type (e.g., "healthcare", "ecommerce", "cab-booking")
+     * Get the currently authenticated user's primary context ID for a specific
+     * domain from JWT token claims with enhanced validation.
+     *
+     * @param domainType The domain type (e.g., "healthcare", "ecommerce",
+     *                   "cab-booking")
      * @return Primary context ID (as UUID) from token claims, or null if not set
-     * @throws SecurityException if authentication context is invalid or domain type is invalid
+     * @throws SecurityException if authentication context is invalid or domain type
+     *                           is invalid
      */
     public UUID getPrimaryContextId(String domainType) {
         log.debug("Retrieving primary context ID for domain type: {}", domainType);
@@ -384,7 +405,9 @@ public class SecurityService {
     }
 
     /**
-     * Get the currently authenticated user's primary branch ID from JWT token claims
+     * Get the currently authenticated user's primary branch ID from JWT token
+     * claims
+     *
      * @deprecated Use getPrimaryContextId("healthcare") instead
      * @return Primary branch ID (as UUID) from token claims, or null if not set
      */
@@ -421,14 +444,19 @@ public class SecurityService {
 
     /**
      * Check if the current user has access to a specific context in a domain
-     * @param contextId The context ID to check access for (as String)
-     * @param domainType The domain type (e.g., "healthcare", "ecommerce", "cab-booking")
+     *
+     * @param contextId  The context ID to check access for (as String)
+     * @param domainType The domain type (e.g., "healthcare", "ecommerce",
+     *                   "cab-booking")
      * @return true if user has access, false otherwise
      */
     /**
-     * Check if the current user has access to a specific context in a domain with enhanced validation.
-     * @param contextId The context ID to check access for (as String)
-     * @param domainType The domain type (e.g., "healthcare", "ecommerce", "cab-booking")
+     * Check if the current user has access to a specific context in a domain with
+     * enhanced validation.
+     *
+     * @param contextId  The context ID to check access for (as String)
+     * @param domainType The domain type (e.g., "healthcare", "ecommerce",
+     *                   "cab-booking")
      * @return true if user has access, false otherwise (fail-safe)
      */
     public boolean hasAccessToContext(String contextId, String domainType) {
@@ -465,9 +493,12 @@ public class SecurityService {
     }
 
     /**
-     * Check if the current user has access to a specific context in a domain with enhanced validation.
-     * @param contextId The context ID to check access for (as UUID)
-     * @param domainType The domain type (e.g., "healthcare", "ecommerce", "cab-booking")
+     * Check if the current user has access to a specific context in a domain with
+     * enhanced validation.
+     *
+     * @param contextId  The context ID to check access for (as UUID)
+     * @param domainType The domain type (e.g., "healthcare", "ecommerce",
+     *                   "cab-booking")
      * @return true if user has access, false otherwise (fail-safe)
      */
     public boolean hasAccessToContext(UUID contextId, String domainType) {
@@ -503,31 +534,38 @@ public class SecurityService {
     /**
      * Validate that the current user has access to a specific context in a domain
      * Throws exception if access is denied
-     * @param contextId The context ID to validate access for (as String)
-     * @param domainType The domain type (e.g., "healthcare", "ecommerce", "cab-booking")
+     *
+     * @param contextId  The context ID to validate access for (as String)
+     * @param domainType The domain type (e.g., "healthcare", "ecommerce",
+     *                   "cab-booking")
      * @throws RuntimeException if user doesn't have access to the context
      */
     public void validateContextAccess(String contextId, String domainType) {
         if (!hasAccessToContext(contextId, domainType)) {
-            throw new RuntimeException("Access denied: User does not have access to context " + contextId + " in domain " + domainType);
+            throw new RuntimeException(
+                    "Access denied: User does not have access to context " + contextId + " in domain " + domainType);
         }
     }
 
     /**
      * Validate that the current user has access to a specific context in a domain
      * Throws exception if access is denied
-     * @param contextId The context ID to validate access for (as UUID)
-     * @param domainType The domain type (e.g., "healthcare", "ecommerce", "cab-booking")
+     *
+     * @param contextId  The context ID to validate access for (as UUID)
+     * @param domainType The domain type (e.g., "healthcare", "ecommerce",
+     *                   "cab-booking")
      * @throws RuntimeException if user doesn't have access to the context
      */
     public void validateContextAccess(UUID contextId, String domainType) {
         if (!hasAccessToContext(contextId, domainType)) {
-            throw new RuntimeException("Access denied: User does not have access to context " + contextId + " in domain " + domainType);
+            throw new RuntimeException(
+                    "Access denied: User does not have access to context " + contextId + " in domain " + domainType);
         }
     }
 
     /**
      * Check if the current user has access to a specific branch
+     *
      * @deprecated Use hasAccessToContext(branchId, "healthcare") instead
      * @param branchId The branch ID to check access for
      * @return true if user has access to the branch, false otherwise
@@ -548,6 +586,7 @@ public class SecurityService {
 
     /**
      * Check if the current user has access to a specific branch
+     *
      * @deprecated Use hasAccessToContext(branchId, "healthcare") instead
      * @param branchId The branch ID (as UUID) to check access for
      * @return true if user has access to the branch, false otherwise
@@ -576,6 +615,7 @@ public class SecurityService {
     /**
      * Validate that the current user has access to a specific branch
      * Throws exception if access is not allowed
+     *
      * @deprecated Use validateContextAccess(branchId, "healthcare") instead
      * @param branchId The branch ID to validate access for
      * @throws RuntimeException if access is not allowed
@@ -590,6 +630,7 @@ public class SecurityService {
     /**
      * Validate that the current user has access to a specific branch
      * Throws exception if access is not allowed
+     *
      * @deprecated Use validateContextAccess(branchId, "healthcare") instead
      * @param branchId The branch ID (as UUID) to validate access for
      * @throws RuntimeException if access is not allowed
