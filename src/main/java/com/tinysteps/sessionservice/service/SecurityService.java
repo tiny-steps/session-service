@@ -252,7 +252,7 @@ public class SecurityService {
             }
 
             List<String> contextIdStrings = jwt.getClaimAsStringList("context_ids");
-            String tokenDomainType = jwt.getClaimAsString("domain_type");
+            String tokenDomainType = jwt.getClaimAsString("domainType");  // Changed from "domain_type" to "domainType"
 
             if (contextIdStrings == null || contextIdStrings.isEmpty()) {
                 log.debug("No context IDs found in JWT token for domain: {}", domainType);
@@ -332,11 +332,11 @@ public class SecurityService {
             }
 
             String primaryContextIdString = jwt.getClaimAsString("primary_context_id");
-            String tokenDomainType = jwt.getClaimAsString("domain_type");
+            String tokenDomainType = jwt.getClaimAsString("domainType");  // Changed from "domain_type" to "domainType"
 
             if (!StringUtils.hasText(primaryContextIdString)) {
                 // Fallback to legacy primary_branch_id for backward compatibility
-                primaryContextIdString = jwt.getClaimAsString("primary_branch_id");
+                primaryContextIdString = jwt.getClaimAsString("primaryBranchId");
                 if (!StringUtils.hasText(primaryContextIdString)) {
                     log.debug("No primary context ID found in JWT token for domain: {}", domainType);
                     return null;
