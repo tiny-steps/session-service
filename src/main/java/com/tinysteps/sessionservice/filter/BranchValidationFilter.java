@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -51,9 +52,17 @@ public class BranchValidationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Skip validation if user is not authenticated
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // If principal is NOT a Jwt (e.g., internal-service synthetic auth) but has ADMIN role, skip branch validation
+        if (!(authentication.getPrincipal() instanceof Jwt) && authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(auth -> auth.equals("ROLE_ADMIN") || auth.equals("ADMIN"))) {
+            log.debug("Skipping branch validation for non-JWT ADMIN principal: {} (principal type: {})", authentication.getName(), authentication.getPrincipal().getClass().getSimpleName());
             filterChain.doFilter(request, response);
             return;
         }

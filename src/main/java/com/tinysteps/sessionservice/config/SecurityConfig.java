@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 
 import java.util.Collection;
 import java.util.List;
@@ -49,9 +50,9 @@ public class SecurityConfig {
                                 // Add the internal API authentication filter before the JWT filter
                                 .addFilterBefore(internalApiAuthenticationFilter,
                                                 UsernamePasswordAuthenticationFilter.class)
-                                // Add branch validation filter after JWT authentication
+                                // Run branch validation AFTER bearer token authentication so principal is a Jwt
                                 .addFilterAfter(branchValidationFilter,
-                                                UsernamePasswordAuthenticationFilter.class);
+                                                BearerTokenAuthenticationFilter.class);
 
                 return http.build();
         }
