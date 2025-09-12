@@ -7,6 +7,7 @@ import com.tinysteps.sessionservice.integration.service.AddressIntegrationServic
 import com.tinysteps.sessionservice.repository.SessionOfferingRepository;
 import com.tinysteps.sessionservice.repository.SessionTypeRepository;
 import com.tinysteps.sessionservice.service.SessionOfferingService;
+import com.tinysteps.sessionservice.service.SecurityService;
 import com.tinysteps.sessionservice.specs.SessionOfferingSpecs;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +18,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.HashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
     private final SessionTypeRepository sessionTypeRepository;
     private final DoctorIntegrationService doctorIntegrationService;
     private final AddressIntegrationService practiceIntegrationService;
+    private final SecurityService securityService;
 
     @Override
     @Transactional
@@ -97,11 +101,24 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
     }
 
     @Override
+    public Page<SessionOffering> searchForCurrentUserBranch(
+            UUID sessionTypeId,
+            Boolean isActive,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Pageable pageable) {
+        // Get current user's primary branch
+        UUID primaryBranchId = securityService.getPrimaryBranchId();
+        return search(sessionTypeId, isActive, minPrice, maxPrice, primaryBranchId, pageable);
+    }
+
+    @Override
     public List<SessionOffering> getByDoctorId(UUID doctorId) {
         return repository.findByDoctorId(doctorId);
     }
 
-    // getByPracticeId method removed - no longer needed after Practice entity removal
+    // getByPracticeId method removed - no longer needed after Practice entity
+    // removal
 
     @Override
     @Transactional
@@ -135,5 +152,65 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
         SessionOffering existing = repository.findById(id).orElseThrow();
         existing.setActive(false);
         return repository.save(existing);
+    }
+
+    @Override
+    public Map<String, Object> getBranchStatistics(UUID branchId) {
+        Map<String, Object> statistics = new HashMap<>();
+
+        // Total session offerings in branch
+        Specification<SessionOffering> branchSpec = SessionOfferingSpecs.byBranchId(branchId);
+        long totalOfferings = repository.count(branchSpec);
+        statistics.put("totalOfferings", totalOfferings);
+
+        // Active session offerings in branch
+        Specification<SessionOffering> activeBranchSpec = branchSpec.and(SessionOfferingSpecs.isActive(true));
+        long activeOfferings = repository.count(activeBranchSpec);
+        statistics.put("activeOfferings", activeOfferings);
+
+        // Inactive session offerings in branch
+        Specification<SessionOffering> inactiveBranchSpec = branchSpec.and(SessionOfferingSpecs.isActive(false));
+        long inactiveOfferings = repository.count(inactiveBranchSpec);
+        statistics.put("inactiveOfferings", inactiveOfferings);
+
+        // Average price of session offerings in branch
+        BigDecimal averagePrice = repository.findAveragePriceByBranchId(branchId);
+        statistics.put("averagePrice", averagePrice != null ? averagePrice : BigDecimal.ZERO);
+
+        return statistics;
+    }
+
+    @Override
+    public Map<String, Object> getCurrentUserBranchStatistics() {
+        UUID primaryBranchId = securityService.getPrimaryBranchId();
+        if (primaryBranchId == null) {
+            throw new RuntimeException("User has no primary branch assigned");
+        }
+        return getBranchStatistics(primaryBranchId);
+    }
+
+    @Override
+    public Map<String, Object> getAllBranchesStatistics() {
+        Map<String, Object> statistics = new HashMap<>();
+
+        // Total session offerings across all branches
+        long totalOfferings = repository.count();
+        statistics.put("totalOfferings", totalOfferings);
+
+        // Active session offerings across all branches
+        Specification<SessionOffering> activeSpec = SessionOfferingSpecs.isActive(true);
+        long activeOfferings = repository.count(activeSpec);
+        statistics.put("activeOfferings", activeOfferings);
+
+        // Inactive session offerings across all branches
+        Specification<SessionOffering> inactiveSpec = SessionOfferingSpecs.isActive(false);
+        long inactiveOfferings = repository.count(inactiveSpec);
+        statistics.put("inactiveOfferings", inactiveOfferings);
+
+        // Average price of session offerings across all branches
+        BigDecimal averagePrice = repository.findAveragePrice();
+        statistics.put("averagePrice", averagePrice != null ? averagePrice : BigDecimal.ZERO);
+
+        return statistics;
     }
 }

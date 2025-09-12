@@ -4,6 +4,7 @@ import com.tinysteps.sessionservice.entity.SessionType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,11 +15,11 @@ public interface SessionTypeService {
     Optional<SessionType> getById(UUID id);
 
     Page<SessionType> search(String name,
-                             Boolean isActive,
-                             Boolean telemedicineAvailable,
-                             Integer minDuration,
-                             Integer maxDuration,
-                             Pageable pageable);
+            Boolean isActive,
+            Boolean telemedicineAvailable,
+            Integer minDuration,
+            Integer maxDuration,
+            Pageable pageable);
 
     SessionType update(UUID id, SessionType sessionType);
 
@@ -29,4 +30,9 @@ public interface SessionTypeService {
     SessionType activate(UUID id);
 
     SessionType deactivate(UUID id);
+
+    // Branch statistics methods
+    Map<String, Object> getBranchStatistics();
+
+    Map<String, Object> getGlobalStatistics();
 }

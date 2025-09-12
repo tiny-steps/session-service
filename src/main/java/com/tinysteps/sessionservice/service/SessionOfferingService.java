@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,16 +19,25 @@ public interface SessionOfferingService {
     Optional<SessionOffering> getById(UUID id);
 
     Page<SessionOffering> search(
-                                       UUID sessionTypeId,
-                                       Boolean isActive,
-                                       BigDecimal minPrice,
-                                       BigDecimal maxPrice,
-                                       UUID branchId,
-                                       Pageable pageable);
+            UUID sessionTypeId,
+            Boolean isActive,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            UUID branchId,
+            Pageable pageable);
+
+    // Branch-based search method
+    Page<SessionOffering> searchForCurrentUserBranch(
+            UUID sessionTypeId,
+            Boolean isActive,
+            BigDecimal minPrice,
+            BigDecimal maxPrice,
+            Pageable pageable);
 
     List<SessionOffering> getByDoctorId(UUID doctorId);
 
-    // getByPracticeId method removed - no longer needed after Practice entity removal
+    // getByPracticeId method removed - no longer needed after Practice entity
+    // removal
 
     SessionOffering update(UUID id, SessionOffering offering);
 
@@ -36,4 +46,11 @@ public interface SessionOfferingService {
     SessionOffering activate(UUID id);
 
     SessionOffering deactivate(UUID id);
+
+    // Branch statistics methods
+    Map<String, Object> getBranchStatistics(UUID branchId);
+
+    Map<String, Object> getCurrentUserBranchStatistics();
+
+    Map<String, Object> getAllBranchesStatistics();
 }
