@@ -2,6 +2,7 @@ package com.tinysteps.sessionservice.service.impl;
 
 import com.tinysteps.sessionservice.entity.SessionOffering;
 import com.tinysteps.sessionservice.entity.SessionType;
+import com.tinysteps.sessionservice.dto.SessionOfferingCreateDto;
 import com.tinysteps.sessionservice.integration.service.DoctorIntegrationService;
 import com.tinysteps.sessionservice.integration.service.AddressIntegrationService;
 import com.tinysteps.sessionservice.repository.SessionOfferingRepository;
@@ -35,22 +36,29 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
 
     @Override
     @Transactional
-    public SessionOffering create(SessionOffering offering) {
+    public SessionOffering create(SessionOfferingCreateDto createDto) {
         // Validate doctor existence via integrations (temporarily disabled due to auth
         // issues)
         try {
-            doctorIntegrationService.validateDoctorExistsOrThrow(offering.getDoctorId());
+            doctorIntegrationService.validateDoctorExistsOrThrow(createDto.getDoctorId());
         } catch (Exception e) {
             // Log the error but don't fail the request for now
             System.err.println("Doctor validation failed: " + e.getMessage());
         }
 
-        // Practice validation removed - no longer needed after Practice entity removal
-
         // Ensure session type exists
-        SessionType type = sessionTypeRepository.findById(offering.getSessionType().getId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid SessionType ID"));
-        offering.setSessionType(type);
+        SessionType sessionType = sessionTypeRepository.findById(createDto.getSessionTypeId())
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Invalid SessionType ID: " + createDto.getSessionTypeId()));
+
+        // Create SessionOffering entity from DTO
+        SessionOffering offering = SessionOffering.builder()
+                .doctorId(createDto.getDoctorId())
+                .branchId(createDto.getBranchId())
+                .sessionType(sessionType)
+                .price(createDto.getPrice())
+                .isActive(createDto.isActive())
+                .build();
 
         return repository.save(offering);
     }

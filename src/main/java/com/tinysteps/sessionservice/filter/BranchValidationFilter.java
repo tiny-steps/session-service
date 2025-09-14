@@ -5,8 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tinysteps.sessionservice.service.SecurityService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,12 +17,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
@@ -37,7 +41,7 @@ public class BranchValidationFilter extends OncePerRequestFilter {
 
     // Patterns for endpoints that require branch validation
     private static final List<Pattern> BRANCH_REQUIRED_PATTERNS = List.of(
-            Pattern.compile("/api/v1/session-offerings.*"),
+            Pattern.compile("/api/v1/session-offerings.*"), // legacy pattern (kept for safety)
             Pattern.compile("/api/v1/sessions.*"));
 
     @Override
@@ -46,7 +50,6 @@ public class BranchValidationFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
 
-        // Skip validation for non-protected endpoints
         if (!requiresBranchValidation(requestURI)) {
             filterChain.doFilter(request, response);
             return;
@@ -58,49 +61,63 @@ public class BranchValidationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // If principal is NOT a Jwt (e.g., internal-service synthetic auth) but has ADMIN role, skip branch validation
-        if (!(authentication.getPrincipal() instanceof Jwt) && authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch(auth -> auth.equals("ROLE_ADMIN") || auth.equals("ADMIN"))) {
-            log.debug("Skipping branch validation for non-JWT ADMIN principal: {} (principal type: {})", authentication.getName(), authentication.getPrincipal().getClass().getSimpleName());
+        // Handle special branchId=all (admin-wide scope) early
+        String rawBranchParam = request.getParameter("branchId");
+        if (rawBranchParam != null && rawBranchParam.equalsIgnoreCase("all")) {
+            boolean isAdmin = authentication.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .anyMatch(a -> a.equals("ROLE_ADMIN") || a.equals("ADMIN"));
+            if (!isAdmin) {
+                sendErrorResponse(response, HttpStatus.FORBIDDEN, "Access denied: Only ADMIN can query all branches");
+                return;
+            }
+            // Mark scope so downstream logic can differentiate if needed
+            request.setAttribute("branchScope", "ALL");
             filterChain.doFilter(request, response);
-            return;
+            return; // Skip normal validation
+        }
+
+        HttpServletRequest requestToUse = request;
+        byte[] cachedBody = null;
+
+        // We need potential branchId from body BEFORE controller; read & wrap safely.
+        boolean bodyCandidate = ("POST".equalsIgnoreCase(request.getMethod()) || "PUT".equalsIgnoreCase(request.getMethod()));
+        if (bodyCandidate) {
+            try {
+                cachedBody = request.getInputStream().readAllBytes();
+                requestToUse = new CachedBodyRequestWrapper(request, cachedBody);
+            } catch (IOException ioe) {
+                log.warn("Failed to read request body for branch validation: {}", ioe.getMessage());
+            }
         }
 
         try {
-            // Check if user has required roles
             List<String> userRoles = getUserRolesFromAuthentication(authentication);
             log.debug("User roles retrieved: {}", userRoles);
             if (!hasRequiredRole(userRoles)) {
-                log.warn(
-                        "User does not have required roles. User roles: {}, Required roles: ADMIN, DOCTOR, RECEPTIONIST",
-                        userRoles);
+                log.warn("User does not have required roles. User roles: {}", userRoles);
                 sendErrorResponse(response, HttpStatus.FORBIDDEN, "Access denied: Insufficient privileges");
                 return;
             }
 
-            // Extract branchId from request
-            String branchId = extractBranchId(request);
+            String branchId = extractBranchId(requestToUse, cachedBody);
             log.debug("Extracted branchId from request: {}", branchId);
 
             if (branchId != null) {
-                // Validate branch access
                 securityService.validateContextAccess(branchId, "healthcare");
                 log.debug("Branch validation successful for branchId: {}", branchId);
             } else {
-                // Use primary branch if no branchId specified
                 UUID primaryBranchId = securityService.getPrimaryContextId("healthcare");
                 log.debug("Primary branch ID retrieved: {}", primaryBranchId);
                 if (primaryBranchId != null) {
-                    request.setAttribute("branchId", primaryBranchId.toString());
+                    requestToUse.setAttribute("branchId", primaryBranchId.toString());
                     log.debug("Using primary branch: {}", primaryBranchId);
                 } else {
                     log.warn("No primary branch ID found for user");
                 }
             }
 
-            filterChain.doFilter(request, response);
-
+            filterChain.doFilter(requestToUse, response);
         } catch (RuntimeException e) {
             log.warn("Branch validation failed: {}", e.getMessage());
             sendErrorResponse(response, HttpStatus.FORBIDDEN, e.getMessage());
@@ -108,99 +125,80 @@ public class BranchValidationFilter extends OncePerRequestFilter {
     }
 
     private boolean requiresBranchValidation(String requestURI) {
-        return BRANCH_REQUIRED_PATTERNS.stream()
-                .anyMatch(pattern -> pattern.matcher(requestURI).matches());
+        return BRANCH_REQUIRED_PATTERNS.stream().anyMatch(p -> p.matcher(requestURI).matches());
     }
 
     private boolean hasRequiredRole(List<String> userRoles) {
-        return userRoles.contains("ADMIN") ||
-                userRoles.contains("DOCTOR") ||
-                userRoles.contains("RECEPTIONIST");
+        return userRoles.contains("ADMIN") || userRoles.contains("DOCTOR") || userRoles.contains("RECEPTIONIST");
     }
 
     private List<String> getUserRolesFromAuthentication(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return List.of();
         }
-
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .map(authority -> {
-                    // Remove "ROLE_" prefix if present
-                    if (authority.startsWith("ROLE_")) {
-                        return authority.substring(5);
-                    }
-                    return authority;
-                })
+                .map(auth -> auth.startsWith("ROLE_") ? auth.substring(5) : auth)
                 .collect(Collectors.toList());
     }
 
-    private String extractBranchId(HttpServletRequest request) throws IOException {
-        // First, try to get from query parameters
+    private String extractBranchId(HttpServletRequest request, byte[] cachedBody) {
+        // Query param first
         String branchId = request.getParameter("branchId");
-        if (branchId != null && !branchId.isEmpty()) {
-            return branchId;
-        }
+        if (branchId != null && !branchId.isEmpty()) return branchId;
 
-        // Then, try to extract from path variables
         branchId = extractFromPathVariable(request.getRequestURI());
-        if (branchId != null) {
-            return branchId;
-        }
+        if (branchId != null) return branchId;
 
-        // Finally, try to extract from request body (for POST/PUT requests)
-        if ("POST".equalsIgnoreCase(request.getMethod()) || "PUT".equalsIgnoreCase(request.getMethod())) {
-            return extractFromRequestBody(request);
-        }
-
-        return null;
-    }
-
-    private String extractFromPathVariable(String requestURI) {
-        // Extract branchId from path patterns like /api/v1/branches/{branchId}/...
-        // Also handle sessions endpoint patterns
-        Pattern pattern = Pattern.compile("/branches/([a-fA-F0-9-]{36})");
-        Matcher matcher = pattern.matcher(requestURI);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-
-        // For sessions endpoint, we don't extract branchId from path
-        // Branch ID should come from query parameters or request body
-        return null;
-    }
-
-    private String extractFromRequestBody(HttpServletRequest request) throws IOException {
-        ContentCachingRequestWrapper wrapper = new ContentCachingRequestWrapper(request);
-        byte[] body = StreamUtils.copyToByteArray(wrapper.getInputStream());
-
-        if (body.length > 0) {
-            String bodyString = new String(body, StandardCharsets.UTF_8);
+        if (cachedBody != null && cachedBody.length > 0) {
             try {
-                JsonNode jsonNode = objectMapper.readTree(bodyString);
+                JsonNode jsonNode = objectMapper.readTree(cachedBody);
                 JsonNode branchIdNode = jsonNode.get("branchId");
                 if (branchIdNode != null && !branchIdNode.isNull()) {
                     return branchIdNode.asText();
                 }
             } catch (Exception e) {
-                log.debug("Could not parse request body as JSON: {}", e.getMessage());
+                log.debug("Could not parse request body for branchId: {}", e.getMessage());
             }
         }
-
         return null;
+    }
+
+    private String extractFromPathVariable(String requestURI) {
+        Pattern pattern = Pattern.compile("/branches/([a-fA-F0-9-]{36})");
+        Matcher matcher = pattern.matcher(requestURI);
+        if (matcher.find()) return matcher.group(1);
+        return null; // sessions endpoints don't encode branchId in path
     }
 
     private void sendErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
         response.setStatus(status.value());
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-
-        String errorResponse = String.format(
-                "{\"error\": \"%s\", \"message\": \"%s\", \"status\": %d}",
-                status.getReasonPhrase(),
-                message,
-                status.value());
-
+        String errorResponse = String.format("{\"error\": \"%s\", \"message\": \"%s\", \"status\": %d}", status.getReasonPhrase(), message, status.value());
         response.getWriter().write(errorResponse);
+    }
+
+    // Wrapper that provides the cached body back to downstream components
+    private static class CachedBodyRequestWrapper extends HttpServletRequestWrapper {
+        private final byte[] cachedBody;
+        CachedBodyRequestWrapper(HttpServletRequest request, byte[] cachedBody) {
+            super(request);
+            this.cachedBody = (cachedBody != null) ? cachedBody : new byte[0];
+        }
+        @Override
+        public ServletInputStream getInputStream() {
+            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(cachedBody);
+            return new ServletInputStream() {
+                @Override public int read() { return byteArrayInputStream.read(); }
+                @Override public boolean isFinished() { return byteArrayInputStream.available() == 0; }
+                @Override public boolean isReady() { return true; }
+                @Override public void setReadListener(ReadListener readListener) { /* no-op */ }
+            };
+        }
+        @Override
+        public BufferedReader getReader() {
+            return new BufferedReader(new InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
+        }
     }
 }
