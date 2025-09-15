@@ -63,7 +63,7 @@ public class SessionOfferingController {
                         @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
         })
         @GetMapping("/{offeringId}")
-        @PreAuthorize("hasRole('ADMIN')")
+        @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR') or hasRole('PATIENT')")
         public ResponseEntity<SessionOffering> getById(@PathVariable UUID offeringId) {
                 return service.getById(offeringId)
                                 .map(ResponseEntity::ok)

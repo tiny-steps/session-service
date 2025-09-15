@@ -26,8 +26,8 @@ public class InternalApiAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain)
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
         String secretHeader = request.getHeader(INTERNAL_SECRET_HEADER);
@@ -39,7 +39,8 @@ public class InternalApiAuthenticationFilter extends OncePerRequestFilter {
                     "internal-service",
                     null,
                     // Grant the ADMIN role, which will pass @PreAuthorize checks
-                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")));
+                    Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN"))
+            );
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
