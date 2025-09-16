@@ -1,5 +1,6 @@
 package com.tinysteps.sessionservice.entity;
 
+import com.tinysteps.sessionservice.integration.constants.Status;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -45,6 +46,10 @@ public class SessionOffering {
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private Status status = Status.ACTIVE;
 
     @CreationTimestamp
     private ZonedDateTime createdAt;

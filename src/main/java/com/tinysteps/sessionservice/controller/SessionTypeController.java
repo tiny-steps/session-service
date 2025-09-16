@@ -119,6 +119,30 @@ public class SessionTypeController {
                 return ResponseEntity.ok(service.deactivate(id));
         }
 
+        @Operation(summary = "Soft delete session type", description = "Soft deletes a session type by setting its status to DELETED. Only accessible by ADMIN users.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Session type soft deleted successfully"),
+                        @ApiResponse(responseCode = "404", description = "Session type not found"),
+                        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
+        })
+        @PostMapping("/{id}/soft-delete")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<SessionType> softDelete(@PathVariable UUID id) {
+                return ResponseEntity.ok(service.softDelete(id));
+        }
+
+        @Operation(summary = "Reactivate session type", description = "Reactivates a soft deleted session type by setting its status to ACTIVE. Only accessible by ADMIN users.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Session type reactivated successfully"),
+                        @ApiResponse(responseCode = "404", description = "Session type not found"),
+                        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
+        })
+        @PostMapping("/{id}/reactivate")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<SessionType> reactivate(@PathVariable UUID id) {
+                return ResponseEntity.ok(service.reactivate(id));
+        }
+
         @Operation(summary = "Check if session type name exists", description = "Checks if a session type with the given name already exists. Only accessible by ADMIN users.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Existence check completed successfully"),

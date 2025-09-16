@@ -2,6 +2,7 @@ package com.tinysteps.sessionservice.service;
 
 import com.tinysteps.sessionservice.entity.SessionOffering;
 import com.tinysteps.sessionservice.dto.SessionOfferingCreateDto;
+import com.tinysteps.sessionservice.integration.constants.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -54,4 +55,17 @@ public interface SessionOfferingService {
         Map<String, Object> getCurrentUserBranchStatistics();
 
         Map<String, Object> getAllBranchesStatistics();
+
+        // Soft delete methods
+        SessionOffering softDelete(UUID id);
+        SessionOffering reactivate(UUID id);
+        
+        List<SessionOffering> findActiveOfferings();
+        Page<SessionOffering> findActiveOfferings(Pageable pageable);
+        
+        List<SessionOffering> findDeletedOfferings();
+        Page<SessionOffering> findDeletedOfferings(Pageable pageable);
+        
+        List<SessionOffering> findOfferingsByStatus(Status status);
+        Page<SessionOffering> findOfferingsByStatus(Status status, Pageable pageable);
 }

@@ -1,9 +1,11 @@
 package com.tinysteps.sessionservice.service;
 
 import com.tinysteps.sessionservice.entity.SessionType;
+import com.tinysteps.sessionservice.integration.constants.Status;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,4 +37,17 @@ public interface SessionTypeService {
     Map<String, Object> getBranchStatistics();
 
     Map<String, Object> getGlobalStatistics();
+
+    // Soft delete methods
+    SessionType softDelete(UUID id);
+    SessionType reactivate(UUID id);
+    
+    List<SessionType> findActiveTypes();
+    Page<SessionType> findActiveTypes(Pageable pageable);
+    
+    List<SessionType> findDeletedTypes();
+    Page<SessionType> findDeletedTypes(Pageable pageable);
+    
+    List<SessionType> findTypesByStatus(Status status);
+    Page<SessionType> findTypesByStatus(Status status, Pageable pageable);
 }

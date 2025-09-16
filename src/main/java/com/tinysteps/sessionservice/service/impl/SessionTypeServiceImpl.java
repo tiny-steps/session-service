@@ -1,16 +1,20 @@
 package com.tinysteps.sessionservice.service.impl;
 
 import com.tinysteps.sessionservice.entity.SessionType;
+import com.tinysteps.sessionservice.integration.constants.Status;
+import com.tinysteps.sessionservice.repository.SessionOfferingRepository;
 import com.tinysteps.sessionservice.repository.SessionTypeRepository;
 import com.tinysteps.sessionservice.service.SessionTypeService;
 import com.tinysteps.sessionservice.service.SecurityService;
 import com.tinysteps.sessionservice.specs.SessionTypeSpecs;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,6 +25,7 @@ import java.util.HashMap;
 public class SessionTypeServiceImpl implements SessionTypeService {
 
     private final SessionTypeRepository repository;
+    private final SessionOfferingRepository offeringRepository;
     private final SecurityService securityService;
 
     @Override
@@ -76,7 +81,12 @@ public class SessionTypeServiceImpl implements SessionTypeService {
     public SessionType deactivate(UUID id) {
         SessionType type = repository.findById(id).orElseThrow();
         type.setActive(false);
-        return repository.save(type);
+        repository.save(type);
+        offeringRepository.findBySessionType(type).forEach(offering -> {
+            offering.setStatus(Status.INACTIVE);
+            offeringRepository.save(offering);
+        });
+        return type;
     }
 
     @Override
@@ -105,6 +115,54 @@ public class SessionTypeServiceImpl implements SessionTypeService {
         statistics.put("telemedicineSessionTypes", telemedicineSessionTypes);
 
         return statistics;
+    }
+
+    @Override
+    @Transactional
+    public SessionType softDelete(UUID id) {
+        SessionType sessionType = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Session type not found with id: " + id));
+        sessionType.setStatus(Status.DELETED);
+        return repository.save(sessionType);
+    }
+
+    @Override
+    @Transactional
+    public SessionType reactivate(UUID id) {
+        SessionType sessionType = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Session type not found with id: " + id));
+        sessionType.setStatus(Status.ACTIVE);
+        return repository.save(sessionType);
+    }
+
+    @Override
+    public List<SessionType> findActiveTypes() {
+        return repository.findByStatus(Status.ACTIVE);
+    }
+
+    @Override
+    public Page<SessionType> findActiveTypes(Pageable pageable) {
+        return repository.findByStatus(Status.ACTIVE, pageable);
+    }
+
+    @Override
+    public List<SessionType> findDeletedTypes() {
+        return repository.findByStatus(Status.DELETED);
+    }
+
+    @Override
+    public Page<SessionType> findDeletedTypes(Pageable pageable) {
+        return repository.findByStatus(Status.DELETED, pageable);
+    }
+
+    @Override
+    public List<SessionType> findTypesByStatus(Status status) {
+        return repository.findByStatus(status);
+    }
+
+    @Override
+    public Page<SessionType> findTypesByStatus(Status status, Pageable pageable) {
+        return repository.findByStatus(status, pageable);
     }
 
     @Override

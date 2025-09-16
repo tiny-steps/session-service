@@ -1,7 +1,8 @@
 package com.tinysteps.sessionservice.controller;
 
-import com.tinysteps.sessionservice.entity.SessionOffering;
 import com.tinysteps.sessionservice.dto.SessionOfferingCreateDto;
+import com.tinysteps.sessionservice.entity.SessionOffering;
+import com.tinysteps.sessionservice.integration.constants.Status;
 import com.tinysteps.sessionservice.service.SessionOfferingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -116,7 +117,6 @@ public class SessionOfferingController {
         @DeleteMapping("/{offeringId}")
         @PreAuthorize("hasRole('ADMIN')")
         public ResponseEntity<Void> delete(@PathVariable UUID offeringId) {
-                service.getById(offeringId).orElseThrow(() -> new IllegalArgumentException("Offering not found"));
                 service.delete(offeringId);
                 return ResponseEntity.ok().build();
         }
@@ -270,5 +270,48 @@ public class SessionOfferingController {
         public ResponseEntity<Map<String, Object>> getSessionOfferingStatisticsAcrossAllBranches() {
                 Map<String, Object> statistics = service.getAllBranchesStatistics();
                 return ResponseEntity.ok(statistics);
+        }
+
+        // Soft Delete Endpoints
+        @Operation(summary = "Soft delete session offering", description = "Soft deletes a session offering by setting its status to DELETED. Only accessible by ADMIN users.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Session offering soft deleted successfully"),
+                        @ApiResponse(responseCode = "404", description = "Session offering not found"),
+                        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
+        })
+        @PostMapping("/{offeringId}/soft-delete")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<SessionOffering> softDelete(@PathVariable UUID offeringId) {
+                SessionOffering softDeletedOffering = service.softDelete(offeringId);
+                return ResponseEntity.ok(softDeletedOffering);
+        }
+
+        @Operation(summary = "Reactivate session offering", description = "Reactivates a soft deleted session offering by setting its status to ACTIVE. Only accessible by ADMIN users.")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Session offering reactivated successfully"),
+                        @ApiResponse(responseCode = "404", description = "Session offering not found"),
+                        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
+        })
+        @PostMapping("/{offeringId}/reactivate")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<SessionOffering> reactivate(@PathVariable UUID offeringId) {
+                SessionOffering reactivatedOffering = service.reactivate(offeringId);
+                return ResponseEntity.ok(reactivatedOffering);
+        }
+
+        @Operation(summary = "Get active session offerings", description = "Retrieves all active session offerings")
+        @GetMapping("/active")
+        @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
+        public ResponseEntity<Page<SessionOffering>> getActiveSessionOfferings(Pageable pageable) {
+                Page<SessionOffering> activeOfferings = service.findOfferingsByStatus(Status.ACTIVE, pageable);
+                return ResponseEntity.ok(activeOfferings);
+        }
+
+        @Operation(summary = "Get deleted session offerings", description = "Retrieves all deleted session offerings")
+        @GetMapping("/deleted")
+        @PreAuthorize("hasRole('ADMIN')")
+        public ResponseEntity<Page<SessionOffering>> getDeletedSessionOfferings(Pageable pageable) {
+                Page<SessionOffering> deletedOfferings = service.findOfferingsByStatus(Status.DELETED, pageable);
+                return ResponseEntity.ok(deletedOfferings);
         }
 }

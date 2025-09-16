@@ -2,6 +2,9 @@ package com.tinysteps.sessionservice.repository;
 
 import com.tinysteps.sessionservice.entity.SessionOffering;
 import com.tinysteps.sessionservice.entity.SessionType;
+import com.tinysteps.sessionservice.integration.constants.Status;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -42,4 +45,22 @@ public interface SessionOfferingRepository
 
     @Query("SELECT AVG(so.price) FROM SessionOffering so WHERE so.branchId = :branchId")
     BigDecimal findAveragePriceByBranchId(@Param("branchId") UUID branchId);
+
+    // Soft delete methods
+    List<SessionOffering> findByStatus(Status status);
+    Page<SessionOffering> findByStatus(Status status, Pageable pageable);
+    
+    Optional<SessionOffering> findByIdAndStatus(UUID id, Status status);
+    
+    List<SessionOffering> findByDoctorIdAndStatus(UUID doctorId, Status status);
+    List<SessionOffering> findByBranchIdAndStatus(UUID branchId, Status status);
+    List<SessionOffering> findBySessionTypeAndStatus(SessionType sessionType, Status status);
+    
+    long countByStatus(Status status);
+    
+    @Query("SELECT so FROM SessionOffering so WHERE so.status != :status")
+    List<SessionOffering> findByStatusNot(@Param("status") Status status);
+    
+    @Query("SELECT so FROM SessionOffering so WHERE so.status != :status")
+    Page<SessionOffering> findByStatusNot(@Param("status") Status status, Pageable pageable);
 }

@@ -3,6 +3,7 @@ package com.tinysteps.sessionservice.service.impl;
 import com.tinysteps.sessionservice.entity.SessionOffering;
 import com.tinysteps.sessionservice.entity.SessionType;
 import com.tinysteps.sessionservice.dto.SessionOfferingCreateDto;
+import com.tinysteps.sessionservice.integration.constants.Status;
 import com.tinysteps.sessionservice.integration.service.DoctorIntegrationService;
 import com.tinysteps.sessionservice.integration.service.AddressIntegrationService;
 import com.tinysteps.sessionservice.repository.SessionOfferingRepository;
@@ -143,7 +144,9 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
     @Override
     @Transactional
     public void delete(UUID id) {
-        repository.deleteById(id);
+        SessionOffering offering = getById(id).orElseThrow(() -> new IllegalArgumentException("Offering not found"));
+        offering.setStatus(Status.INACTIVE);
+        repository.save(offering);
     }
 
     @Override
@@ -220,5 +223,53 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
         statistics.put("averagePrice", averagePrice != null ? averagePrice : BigDecimal.ZERO);
 
         return statistics;
+    }
+
+    @Override
+    @Transactional
+    public SessionOffering softDelete(UUID id) {
+        SessionOffering offering = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Session offering not found with id: " + id));
+        offering.setStatus(Status.DELETED);
+        return repository.save(offering);
+    }
+
+    @Override
+    @Transactional
+    public SessionOffering reactivate(UUID id) {
+        SessionOffering offering = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Session offering not found with id: " + id));
+        offering.setStatus(Status.ACTIVE);
+        return repository.save(offering);
+    }
+
+    @Override
+    public List<SessionOffering> findActiveOfferings() {
+        return repository.findByStatus(Status.ACTIVE);
+    }
+
+    @Override
+    public Page<SessionOffering> findActiveOfferings(Pageable pageable) {
+        return repository.findByStatus(Status.ACTIVE, pageable);
+    }
+
+    @Override
+    public List<SessionOffering> findDeletedOfferings() {
+        return repository.findByStatus(Status.DELETED);
+    }
+
+    @Override
+    public Page<SessionOffering> findDeletedOfferings(Pageable pageable) {
+        return repository.findByStatus(Status.DELETED, pageable);
+    }
+
+    @Override
+    public List<SessionOffering> findOfferingsByStatus(Status status) {
+        return repository.findByStatus(status);
+    }
+
+    @Override
+    public Page<SessionOffering> findOfferingsByStatus(Status status, Pageable pageable) {
+        return repository.findByStatus(status, pageable);
     }
 }
