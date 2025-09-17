@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: ts-session-service
-          image: subhankarm2312/ts-session-service # CORRECTED: Placeholder name now matches ci.yml
+          image: tinystepsd3v/ts-session-service # CORRECTED: Placeholder name now matches ci.yml
           env:
             - name: JAVA_TOOL_OPTIONS
               value: "-Xms128m -Xmx256m"
