@@ -135,6 +135,7 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
         SessionOffering existing = repository.findById(id).orElseThrow();
 
         // Only update allowed fields
+        existing.setDoctorId(offering.getDoctorId());
         existing.setPrice(offering.getPrice());
         existing.setActive(offering.isActive());
 
@@ -271,5 +272,15 @@ public class SessionOfferingServiceImpl implements SessionOfferingService {
     @Override
     public Page<SessionOffering> findOfferingsByStatus(Status status, Pageable pageable) {
         return repository.findByStatus(status, pageable);
+    }
+
+    @Override
+    public List<UUID> getDoctorIdsWithSessions() {
+        return repository.findDistinctDoctorIdsWithSessions();
+    }
+
+    @Override
+    public List<UUID> getDoctorIdsWithSessionsByBranch(UUID branchId) {
+        return repository.findDistinctDoctorIdsWithSessionsByBranch(branchId);
     }
 }

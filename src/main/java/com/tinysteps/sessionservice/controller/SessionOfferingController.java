@@ -90,19 +90,20 @@ public class SessionOfferingController {
                 if (branchIdStr != null && !branchIdStr.isBlank() && !branchIdStr.equalsIgnoreCase("all")) {
                         branchId = UUID.fromString(branchIdStr); // will throw if invalid UUID (intentional)
                 }
-                // If branchIdStr == all -> branchId stays null meaning all branches (admin only validated in filter)
+                // If branchIdStr == all -> branchId stays null meaning all branches (admin only
+                // validated in filter)
                 return ResponseEntity
                                 .ok(service.search(sessionTypeId, isActive, minPrice, maxPrice, branchId, pageable));
         }
 
-        @Operation(summary = "Update session offering", description = "Updates a session offering with new information. Only accessible by ADMIN users.")
+        @Operation(summary = "Update session offering", description = "Updates a session offering with new information. Accessible by ADMIN and DOCTOR users.")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Session offering updated successfully"),
                         @ApiResponse(responseCode = "404", description = "Session offering not found"),
-                        @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
+                        @ApiResponse(responseCode = "403", description = "Access denied")
         })
         @PutMapping("/{offeringId}")
-        @PreAuthorize("hasRole('ADMIN')")
+        @PreAuthorize("hasRole('ADMIN') or hasRole('DOCTOR')")
         public ResponseEntity<SessionOffering> update(@PathVariable UUID offeringId,
                         @RequestBody SessionOffering offering) {
                 return ResponseEntity.ok(service.update(offeringId, offering));
@@ -313,5 +314,30 @@ public class SessionOfferingController {
         public ResponseEntity<Page<SessionOffering>> getDeletedSessionOfferings(Pageable pageable) {
                 Page<SessionOffering> deletedOfferings = service.findOfferingsByStatus(Status.DELETED, pageable);
                 return ResponseEntity.ok(deletedOfferings);
+        }
+
+        // ==================== DOCTOR FILTERING ENDPOINTS ====================
+
+        @Operation(summary = "Get doctor IDs with sessions", description = "Retrieves a list of doctor IDs who have active session offerings")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Doctor IDs with sessions retrieved successfully"),
+                        @ApiResponse(responseCode = "403", description = "Access denied")
+        })
+        @GetMapping("/doctors-with-sessions")
+        @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'RECEPTIONIST')")
+        public ResponseEntity<List<UUID>> getDoctorIdsWithSessions() {
+                return ResponseEntity.ok(service.getDoctorIdsWithSessions());
+        }
+
+        @Operation(summary = "Get doctor IDs with sessions by branch", description = "Retrieves a list of doctor IDs who have active session offerings for a specific branch")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Doctor IDs with sessions for branch retrieved successfully"),
+                        @ApiResponse(responseCode = "403", description = "Access denied - No permission to view this branch")
+        })
+        @GetMapping("/doctors-with-sessions/branch/{branchId}")
+        @PreAuthorize("@securityService.hasBranchAccess(#branchId) or hasRole('ADMIN')")
+        public ResponseEntity<List<UUID>> getDoctorIdsWithSessionsByBranch(
+                        @Parameter(description = "Branch ID", required = true) @PathVariable UUID branchId) {
+                return ResponseEntity.ok(service.getDoctorIdsWithSessionsByBranch(branchId));
         }
 }

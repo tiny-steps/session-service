@@ -58,14 +58,23 @@ public interface SessionOfferingService {
 
         // Soft delete methods
         SessionOffering softDelete(UUID id);
+
         SessionOffering reactivate(UUID id);
-        
+
         List<SessionOffering> findActiveOfferings();
+
         Page<SessionOffering> findActiveOfferings(Pageable pageable);
-        
+
         List<SessionOffering> findDeletedOfferings();
+
         Page<SessionOffering> findDeletedOfferings(Pageable pageable);
-        
+
         List<SessionOffering> findOfferingsByStatus(Status status);
+
         Page<SessionOffering> findOfferingsByStatus(Status status, Pageable pageable);
+
+        // Methods to get doctors with sessions
+        List<UUID> getDoctorIdsWithSessions();
+
+        List<UUID> getDoctorIdsWithSessionsByBranch(UUID branchId);
 }
